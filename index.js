@@ -4,7 +4,9 @@ import gql from "graphql-tag";
 import ApolloClient from "apollo-boost";
 import { ApolloProvider, Query } from "react-apollo";
 import chroma from "chroma-js";
-import moment from "moment";
+import moment from "moment-timezone";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faLink } from '@fortawesome/free-solid-svg-icons'
 
 const client = new ApolloClient({
   uri: "https://weather-api.thedeskofmatthew.com/graphql"
@@ -74,32 +76,88 @@ class RunBlock extends React.Component {
   }
 
   render() {
-    const left = ((this.props.start.hour*60) + this.props.start.minute) / 1440 * 100;
-    const width = this.props.duration / 1440 * 100;
-    const today = new Date();
+    const leftOffset = ((this.props.start.hour*60) + this.props.start.minute) / 1440 * 100;
+    let width = this.props.duration / 1440 * 100;
+    let className = "runBlock";
+    let remainder = null;
+    if (width + leftOffset > 100) {
+      remainder = width + leftOffset - 100;
+      width = 100 - leftOffset;
+      className += " blockOverlap";
+    } 
+    let utcToday = moment.tz();
+    utcToday.hour(+this.props.label.replace('Z', ''));
+    utcToday.minute(0);
+    utcToday.second(0);
+    utcToday.millisecond(0);
+    utcToday.add(this.props.limit, "hours");
+    utcToday.tz(moment.tz.guess());
 
-    return (
-      <div className="runBlock" style={{ left: left+'%', width: width+'%', backgroundColor: this.props.color }}>
-        <div className="runInfo" style={{ color: this.props.color }}>{this.props.label} &bull; Range: +{this.props.limit}</div>
-      </div>
-    );
+    const originalRunBlock = 
+      <div className={className} style={{ left: leftOffset+'%', width: width+'%', backgroundColor: this.props.color }}>
+        <div className="runInfo" style={{ borderLeftColor: this.props.color }}>
+          <span className="runLabel">{this.props.label}</span>
+          <span className="infoRow">
+            <span className="infoTitle">Range</span>
+            <span className="infoDetail">{utcToday.format('MMM D, ha z')}<br />+{this.props.limit}h</span>
+          </span>
+        </div>
+      </div>;
+
+    if (remainder) {
+      return [
+        originalRunBlock,
+        <div className="runBlock blockRemainder" style={{ left: '0%', width: remainder+'%', backgroundColor: this.props.color }}>
+          <div className="runInfo" style={{ borderLeftColor: this.props.color }}>
+            <span className="runLabel">{this.props.label}</span>
+            <span className="infoRow">
+              <span className="infoTitle">Range</span>
+              <span className="infoDetail">{utcToday.format('MMM D, ha z')}<br />+{this.props.limit}h</span>
+            </span>
+          </div>
+        </div>
+      ]
+    }
+    return originalRunBlock;
   }
 };
 
-const ModelBlock = (props) => {
-  return (
-    <div className="modelBlock" style={{ backgroundColor: props.color+'32'}}>
-      <div className="modelInfo">
-        <div className="modelName"><a target="_blank" href={props.modelData.viewLinks[0]}>{props.modelData.name}</a></div>
-        <div className="modelDetails">{props.modelData.res}km</div>
+class ModelBlock extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {isToggleOn: false};
+    this.handleClick = this.handleClick.bind(this);
+  }
+
+  handleClick() {
+    this.setState(state => ({
+      isToggleOn: !state.isToggleOn
+    }));
+  }
+  render() {
+    return (
+      <div className={`modelBlock ${this.state.isToggleOn ? 'blockOn' : 'blockOff'}`} onClick={this.handleClick} style={{ backgroundColor: this.props.color+'32'}}>
+        <div className="modelInfo">
+          <div className="modelName">{this.props.modelData.name}</div>
+          <div className="modelDetails">{this.props.modelData.res}km</div>
+        </div>
+        <div className="runs">
+          {this.props.modelData.runs.map((runData) => {
+            return <RunBlock color={this.props.color} start={runData.start} duration={runData.duration} label={runData.label} limit={runData.limit} />;
+          })}
+        </div>
+        <div className="modelToggle">
+          <div className="modelLinks">
+            {this.props.modelData.viewLinks.map((link) => (
+              <a href={link} style={{ backgroundColor: this.props.color }} target="_blank">
+                <FontAwesomeIcon icon={faLink} /> 
+              </a>
+            ))}
+          </div>
+        </div>
       </div>
-      <div className="runs">
-        {props.modelData.runs.map((runData) => {
-          return <RunBlock color={props.color} start={runData.start} duration={runData.duration} label={runData.label} limit={runData.limit} />;
-        })}
-      </div>
-    </div>
-  );
+    );
+  }
 };
 
 const ModelList = () => (
@@ -137,6 +195,7 @@ const ModelList = () => (
 
 const App = () =>  (
   <ApolloProvider client={client}>
+    <h1>Forecast Run Schedule<span>Times in UTC</span></h1>
     <TimeTicks />
     <div className="tickerHolder">
       <TimeTicker />

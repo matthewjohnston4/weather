@@ -10,7 +10,7 @@
 
             gtag('config', 'UA-51489247-4');
         </script>
-        <title>Weather Model Schedule</title>
+        <title>Forecast Run Schedule</title>
         <link rel="stylesheet" href="https://use.typekit.net/tvt0jix.css">
         <style>
             /*  http://meyerweb.com/eric/tools/css/reset/ 
@@ -65,44 +65,66 @@
             /* Custom CSS */
 
             html {
+                min-width: 800px;
                 overflow-y: scroll;
+                overflow-x: hidden;
+            }
+
+            @media only screen and (max-width: 800px) {
+                html {
+                    overflow-x: scroll;
+                }
             }
 
             body {
                 background-color: white;
-                font-family: "ff-tisa-sans-web-pro", sans-serif;
-                font-weight: 300;
+                font-family: "halyard-text", sans-serif;
+                font-weight: 200;
             }
             
             h1 {
-                color: maroon;
-                margin-left: 40px;
+                color: #383838;
+                display: block;
+                font-family: "halyard-display", sans-serif;
+                font-size: 40px;
+                font-weight: 600;
+                padding: 20px 10px;
+                text-rendering: optimizeLegibility;
+            }
+
+            h1 span {
+                display: block;
+                font-family: "halyard-text", sans-serif;
+                font-size: 12px;
+                font-weight: 300;
+                opacity: 0.5;
             }
 
             .appHolder {
                 height: 100%;
-                overflow-x: hidden;
+                overflow: hidden;
                 padding-top: 60px;
                 position: relative;
                 width: 100%;
             }
 
             .timeTicksHolder {
-                position: fixed;
+                position: absolute;
                 top: 0;
                 width: 100%;
                 height: 100%;
+                z-index: 45;
             }
 
             .timeTick {
-                border-left: 1px dashed rgba(34, 34, 34, 0.233);
+                border-left: 1px dotted rgba(50, 50, 50, 0.1);
                 height: 100%;
                 position: absolute;
             }
 
-            @media only screen and (max-width: 500px) {
+            @media only screen and (max-width: 800px) {
                 .timeTick:nth-child(even) {
-                    display: none;
+                    opacity: 0.5;
                 }
             }
 
@@ -110,7 +132,6 @@
                 color: rgba(58, 58, 58, 0.603);
                 display: block;
                 font-size: 12px;
-                font-weight: 300;
                 padding: 10px;
             }
 
@@ -139,8 +160,14 @@
                 animation: pulse 0.5s ease-in-out infinite alternate;
             }
 
+            .modelList {
+                position: relative;
+                z-index: 50;
+            }
+
             .modelBlock {
-                margin-bottom: 30px;
+                cursor: pointer;
+                margin-bottom: 1px;
                 position: relative;
                 width: 100%;
             }
@@ -150,17 +177,16 @@
                 display: flex;
                 flex-flow: column nowrap;
                 font-size: 12px;
-                justify-content: center;
-                height: 100%;
+                justify-content: flex-start;
+                margin-top: 10px;
                 left: 10px;
                 position: absolute;
                 z-index: 100;
             }
 
             .modelName {
-                font-family: "europa", sans-serif;
-                font-size: 24px;
-                font-weight: 700;
+                font-size: 16px;
+                text-rendering: optimizeLegibility;
             }
 
             .modelName a {
@@ -171,6 +197,7 @@
             .modelBlock .runs {
                 height: 50px;
                 position: relative;
+                transition: margin 0.3s;
             }
 
             .runBlock {
@@ -178,14 +205,81 @@
                 position: absolute;
             }
 
+            .runBlock.blockRemainder {
+                opacity: 0.25;
+            }
+
             .runInfo {
+                border-left-width: 2px;
+                border-left-style: solid;
+                color: #646464;
+                display: flex;
+                flex-flow: column nowrap;
                 font-size: 12px;
-                font-weight: 400;
-                opacity: 0.8;
+                opacity: 1;
+                padding-left: 5px;
                 position: absolute;
-                bottom: -15px;
+                top: 100%;
                 left: 0px;
-                width: 200px;
+                margin-top: 5px;
+                min-width: 100px;
+                transition: opacity 0.3s;
+            }
+
+            .blockOverlap .runInfo {
+                left: auto;
+                right: 5px;
+                text-align: right;
+            }
+
+            .runLabel {
+                color: #383838;
+                font-family: 'halyard-display', sans-serif;
+                font-weight: 600;
+                text-rendering: optimizeLegibility;
+            }
+
+            .blockOff .runInfo {
+                opacity: 0;
+            }
+
+            .blockOn .runs {
+                margin-bottom: 65px;
+            }
+
+            .modelToggle {
+                height: 40px;
+                width: 100%;
+                opacity: 1;
+                transition: height 0.3s, opacity 0.3s;
+            }
+
+            .blockOff .modelToggle {
+                height: 0px;
+                opacity: 0;
+            }
+
+            .modelLinks {
+                position: absolute;
+            }
+            
+            .modelLinks a {
+                color: white;
+                display: inline-block;
+                padding: 5px;
+                margin: 5px;
+            }
+
+            .infoRow {
+                display: flex;
+                flex-flow: column nowrap;
+                margin-top: 5px;
+            }
+
+            .infoTitle {
+                color: #383838;
+                font-family: 'halyard-display', sans-serif;
+                font-weight: 600;
             }
         </style>
     </head>
